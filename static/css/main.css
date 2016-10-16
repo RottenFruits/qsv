@@ -19,6 +19,9 @@ body {
   background: red;
   position: absolute;
 }
+.node .selected {
+  stroke: white;
+}
 .divs {
   position: absolute;
   top: 0;
@@ -90,4 +93,13 @@ div.tooltip {
   pointer-events: none;
   z-index: 999;
   color: #FAFAFA;
+}
+rect.extent {
+  fill: #bbbbbb;
+}
+
+.brush .extent {
+  fill-opacity: .1;
+  stroke: #fff;
+  shape-rendering: crispEdges;
 }

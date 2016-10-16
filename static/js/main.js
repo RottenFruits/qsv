@@ -62,7 +62,7 @@ function renderGraph(data){
       edges:myEdges
     },
     //plot size
-    height:600,
+    height:400,
     width:1200,
   });
   networkgraph.renderNetwork();
