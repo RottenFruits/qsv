@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>test</title>
+	<style type="text/css">
+	</style>
+	<link href="static/css/main.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+	<div id="graph">
+		<h1>Topological data analysis</h1>
+	</div>
+
+	<p class="meta">
+		<b>Summary</b><br>
+
+	</p>
+
+	<p class="bar">
+		<b>barchart</b><br>
+	</p>
+
+	<div class="controller">
+		<div>
+			<b>file upload</b>
+			<div id="file"></div>
+			<div id="upload"></div>
+		</div>
+
+		<div>
+			<b>data list</b><br>
+			<select id="table_list_btn" onChange="selectTable()">
+				{% for table in tables %}
+				<option value = {{table}}>{{table}}</option>
+				{% endfor %}
+			</select>
+		</div><br>
+
+		<div id="overlap"></div>
+		<div id="nr_cube"></div>
+
+		<div id="val_list">
+			<br><b>variables</b><br>
+			<select id="val_list_btn">
+				{% for val in vals %}
+				<option value = {{val}}>{{val}}</option>
+				{% endfor %}
+			</select>
+		</div><br>
+
+		<div id="create"></div>
+
+	</div>
+
+
+	<script type="text/javascript" src="static/lib/js/d3.v3.js"></script>
+	<script type="text/javascript" src="static/lib/js/jquery-3.1.1.min.js"></script>
+	<script type="text/javascript" src="static/lib/js/underscore-min.js"></script>
+	<script type="text/javascript" src="static/lib/js/backbone-min.js"></script>
+	<script type="text/javascript" src="static/js/mvc.js"></script>
+	<script type="text/javascript" src="static/js/main.js"></script>
+
+</body>
+</html>
