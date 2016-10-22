@@ -180,8 +180,6 @@ var NetworkGraph = ChartBase.extend({
     }
 
     var brusher = d3.svg.brush()
-    //.x(d3.scale.identity().domain([0, width]))
-    //.y(d3.scale.identity().domain([0, height]))
     .x(xScale)
     .y(yScale)
     .on("brushstart", function(d) {
@@ -190,9 +188,9 @@ var NetworkGraph = ChartBase.extend({
       })
       .on("brush", function() {
         var extent = d3.event.target.extent();
-
+        //extentで選択範囲を取得
         node.classed("selected", function(d) {
-          return d.selected = d.previouslySelected ^
+          return d.selected = d.previouslySelected |
           (extent[0][0] <= d.x && d.x < extent[1][0]
             && extent[0][1] <= d.y && d.y < extent[1][1]);
           });
@@ -207,13 +205,11 @@ var NetworkGraph = ChartBase.extend({
 
         var svg_graph = svg.append('svg:g')
         .call(zoomer)
-        //.call(brusher)
 
         var rect = svg_graph.append('svg:rect')
         .attr('width', width)
         .attr('height', height)
         .attr('fill', 'transparent')
-        //.attr('opacity', 0.5)
         .attr('stroke', 'transparent')
         .attr('stroke-width', 1)
         //.attr("pointer-events", "all")
@@ -278,7 +274,6 @@ var NetworkGraph = ChartBase.extend({
         .on("dblclick", function(d) { d3.event.stopPropagation(); })
         .on("click", function(d) {
           if (d3.event.defaultPrevented) return;
-
           if (!shiftKey) {
             //if the shift key isn't down, unselect everything
             node.classed("selected", function(p) { return p.selected =  p.previouslySelected = false; })
@@ -289,9 +284,9 @@ var NetworkGraph = ChartBase.extend({
           node.filter(function(d) { return d.selected; })//選択したものを取り出す
           .each(function(d) { console.log(d);})
         })
-        .on("mouseup", function(d) {
-          //if (d.selected && shiftKey) d3.select(this).classed("selected", d.selected = false);
-        })
+        // .on("mouseup", function(d) {
+        //   //if (d.selected && shiftKey) d3.select(this).classed("selected", d.selected = false);
+        // })
         .call(d3.behavior.drag()
         .on("dragstart", dragstarted)
         .on("drag", dragged)
@@ -337,13 +332,13 @@ var NetworkGraph = ChartBase.extend({
 
           node.attr('cx', function(d) { return d.x; })
           .attr('cy', function(d) { return d.y; });
-        };
+        }
 
         function keydown() {
           shiftKey = d3.event.shiftKey || d3.event.metaKey;
           ctrlKey = d3.event.ctrlKey;
 
-          // console.log('d3.event', d3.event)
+          //console.log('d3.event', d3.event)
 
           if (shiftKey) {
             svg_graph.call(zoomer)
@@ -352,18 +347,22 @@ var NetworkGraph = ChartBase.extend({
             .on("touchmove.zoom", null)
             .on("touchend.zoom", null);
 
-            //svg_graph.on('zoom', null);
             vis.selectAll('g.gnode')
             .on('mousedown.drag', null);
 
             brush.select('.background').style('cursor', 'crosshair')
             brush.call(brusher);
           }
+          if (ctrlKey) {//ctrlキーで選択されているものを解除
+            node.classed("selected", function(d) {
+              d.selected = 0;
+            });
+          }
+
         }
 
         function keyup() {
           shiftKey = d3.event.shiftKey || d3.event.metaKey;
-          ctrlKey = d3.event.ctrlKey;
 
           brush.call(brusher)
           .on("mousedown.brush", null)
