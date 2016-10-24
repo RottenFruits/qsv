@@ -19,7 +19,7 @@ This application is data structure visualizer by topological data analysis metho
 
 ## Licence
 
-[MIT]
+[MIT](license.txt)
 
 ## Author
-Rotten Fruits
+Shohei Ogawa
