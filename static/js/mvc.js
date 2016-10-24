@@ -82,8 +82,8 @@ var ChartBase = Backbone.View.extend({
     };
 
     //rendering
-    // this.renderAxes();
     this.renderData();
+
     return this;
   }
 });
@@ -146,7 +146,7 @@ var NetworkGraph = ChartBase.extend({
 
   },
   renderEdge: function(vis, edges, nodes){
-    //エッジのレンダー
+    //エッジ
     var link = vis.append("g")
     .attr("class", "link")
     .selectAll("line");
@@ -164,6 +164,7 @@ var NetworkGraph = ChartBase.extend({
 
   },
   renderNode:function(vis, nodes, force){
+    //ノード
     var color = this.color30(),
     shiftKey;
 
@@ -193,8 +194,7 @@ var NetworkGraph = ChartBase.extend({
       // always select this node
       d3.select(this).classed("selected", d.selected = !d.previouslySelected);
 
-      node.filter(function(d) { return d.selected; })//選択したものを取り出す
-      .each(function(d) { console.log(d);})
+      selected_node_aggregate(node);
     })
     // .on("mouseup", function(d) {
     //   //if (d.selected && shiftKey) d3.select(this).classed("selected", d.selected = false);
@@ -230,9 +230,29 @@ var NetworkGraph = ChartBase.extend({
     function dragended(d) {
       //d3.select(self).classed("dragging", false);
       node.filter(function(d) { return d.selected; })
-      .each(function(d) { d.fixed &= ~6;})
+      .each(function(d) { d.fixed &= ~6;});
     }
 
+    function selected_node_aggregate(node){//選択したノードのラベルを集計
+      var selected_node_label = [];
+      node.filter(function(d) { return d.selected; })//選択したものを取り出す
+      .each(function(d) {
+        Array.prototype.push.apply(selected_node_label, d.labels); //配列の結合
+      });
+      selected_node_label = _.uniq(selected_node_label); //重複を除く
+
+      var selected_node_label = _.map(selected_node_label, function(d) {
+        return d.split("_")[1]
+      })
+
+      var selected_node_label_count = selected_node_label.reduce(function(d, i) {
+        d[i] = d[i] ? d[i] + 1 : 1;
+        return d;
+      }, {});
+
+      var aggregate_res = document.getElementById("aggregate_res");
+      aggregate_res.innerHTML = JSON.stringify(selected_node_label_count);
+    }
 
   },
   renderGraph: function(){
@@ -282,8 +302,8 @@ var NetworkGraph = ChartBase.extend({
           d3.event.target.clear();
           d3.select(this).call(d3.event.target);
 
-          d3.selectAll("circle").filter(function(d) { return d.selected; })//選択したものを取り出す
-          .each(function(d) { console.log(d);})
+          selected_node_aggregate(d3.selectAll("circle"));
+
         });
 
         var svg = d3.select(this.el)
@@ -294,7 +314,6 @@ var NetworkGraph = ChartBase.extend({
         .append("svg")
         .attr("width", width)
         .attr("height", height);
-
 
         var svg_graph = svg.append('svg:g')
         .call(zoomer);
@@ -312,7 +331,6 @@ var NetworkGraph = ChartBase.extend({
         .attr("class", "brush");
 
         var vis = svg_graph.append("svg:g");
-
         vis.attr('fill', 'red')
         .attr('stroke', 'black')
         .attr('stroke-width', 1)
@@ -324,7 +342,6 @@ var NetworkGraph = ChartBase.extend({
         .on("touchstart.brush", null)
         .on("touchmove.brush", null)
         .on("touchend.brush", null);
-
         brush.select('.background').style('cursor', 'auto');
 
         //エッジ
@@ -366,6 +383,8 @@ var NetworkGraph = ChartBase.extend({
           if (ctrlKey) {//ctrlキーで選択されているものを解除
             d3.selectAll("circle").classed("selected", function(d) {
               d.selected = 0;
+              var aggregate_res = document.getElementById("aggregate_res");
+              aggregate_res.innerHTML = "";
             });
           }
         }
@@ -380,6 +399,27 @@ var NetworkGraph = ChartBase.extend({
 
           brush.select('.background').style('cursor', 'auto')
           svg_graph.call(zoomer);
+        }
+
+        function selected_node_aggregate(node){//選択したノードのラベルを集計
+          var selected_node_label = [];
+          node.filter(function(d) { return d.selected; })//選択したものを取り出す
+          .each(function(d) {
+            Array.prototype.push.apply(selected_node_label, d.labels); //配列の結合
+          });
+          selected_node_label = _.uniq(selected_node_label); //重複を除く
+
+          var selected_node_label = _.map(selected_node_label, function(d) {
+            return d.split("_")[1]
+          })
+
+          var selected_node_label_count = selected_node_label.reduce(function(d, i) {
+            d[i] = d[i] ? d[i] + 1 : 1;
+            return d;
+          }, {});
+
+          var aggregate_res = document.getElementById("aggregate_res");
+          aggregate_res.innerHTML = JSON.stringify(selected_node_label_count);
         }
 
       },
@@ -419,40 +459,50 @@ var NetworkGraph = ChartBase.extend({
           .domain([0, max])
           .range([0, this.height]);
         },
+        renderMinMax:function(){
+          var nodes = this.collection.toJSON();
+          var height = this.height;
+
+          var dataset_meanValue = _.pluck(nodes, "meanValue");
+          var min_value = d3.min(dataset_meanValue, function(d){
+            return d3.format(".1f")(d);
+          });
+          var max_value = d3.max(dataset_meanValue, function(d){
+            return d3.format(".1f")(d);
+          });
+
+          var chart = this,
+          xScale = this.scales.x;
+
+
+          this.svg.selectAll("text")
+          .data([min_value, max_value])
+          .enter()
+          .append("text")
+          .text(function(d){return d})
+          .attr("x", function(d, i) {
+            return xScale(i * 30);
+          })
+          .attr("y", height + 10)
+          .attr("font-family", "sans-serif")
+          .attr("font-size", "8px")
+          .attr("fill", "white");
+
+        },
         setHistogram:function(){ // ヒストグラム
           return d3.layout.histogram()
           .range(this.options.range)
           .bins(this.options.bins);
         },
-        renderAxes: function() {
-          var xAxis = d3.svg.axis()
-          .scale(this.scales.x)
-          .orient("bottom")
-          .ticks(5);
-
-          var yAxis = d3.svg.axis()
-          .scale(this.scales.y)
-          .orient("left")
-          .tickFormat(d3.format(".0%"));
-
-          this.svg.append("g")
-          .attr("class", "x axis")
-          .attr("transform", "translate(0," + this.height + ")")
-          .call(xAxis);
-
-          this.svg.append("g")
-          .attr("class", "y axis")
-          .call(yAxis);
-        },
-
         renderData: function() {
           //変数
           var color = this.color30();
           var histogram = this.setHistogram();
           var nodes = this.collection.toJSON();
           var height = this.height;
+          var dataset_Scaling_meanValue = _.pluck(nodes, "Scaling_meanValue");
 
-          var hist_data = histogram(_.pluck(nodes, "Scaling_meanValue"))
+          var hist_data = histogram(dataset_Scaling_meanValue);
           var hist_max = d3.max(hist_data, function(d){ //度数の最大値
             return d.length;
           });
@@ -479,6 +529,25 @@ var NetworkGraph = ChartBase.extend({
           .attr("fill", function(d,i){    // 色を指定する
             return color(i);    // 色を返す
           });
+        },
+        renderHist: function() {
+          var margin = this.options.margin;
+          this.width = this.options.width - margin.left - margin.right;
+          this.height = this.options.height - margin.top - margin.bottom;
+
+          this.svg = d3.select(this.el).append("svg")
+          .attr("width", this.width + margin.left + margin.right)
+          .attr("height", this.height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+          this.scales = {
+            x: this.getXScale(),
+            y: this.getYScale()
+          };
+
+          this.renderData();
+          this.renderMinMax();
         }
       });
 
@@ -521,6 +590,9 @@ var NetworkGraph = ChartBase.extend({
           var val_list_btn = document.getElementById("val_list_btn");
           var selectTableBtn = document.getElementById('table_list_btn');
           var table = selectTableBtn.options[selectTableBtn.selectedIndex].value;
+
+          var aggregate_res = document.getElementById("aggregate_res");
+          aggregate_res.innerHTML = "";
 
           socket.send(
             JSON.stringify({"table":table, "overlap":add_overlap_sl.getValue(),

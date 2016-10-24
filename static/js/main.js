@@ -71,13 +71,17 @@ function renderGraph(data){
     // Basic Backbone view options
     el:".bar",
     collection: myNodes,
-    margin: {top: 2, right: 2, bottom: 2, left: 2},
+    margin: {top: 2, right: 10, bottom: 10, left: 10},
     //plot size
     height:50,
     width:220,
   });
 
-  histogram.render();
+  histogram.renderHist();
+  //ヒストグラムのタイトル
+  var bar_title = document.getElementById("bar_title");
+  var val_list_btn = document.getElementById("val_list_btn");
+  bar_title.innerHTML = val_list_btn.options[val_list_btn.selectedIndex].value;
 
 };
 

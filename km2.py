@@ -442,14 +442,18 @@ class KeplerMapper(object):
     json_s["links"] = []
     meanValue_max = 0
     meanValue_min = 0
+
     k2e = {} # a key to incremental int dict, used for id's when linking
 
     for e, k in enumerate(complex["nodes"]):#ノード
+      labels = []
       # Tooltip and node color formatting, TODO: de-mess-ify
       values = ([float(f) for f in colored_variable[complex["nodes"][k]]])
-      labels = ([f for f in label_variable[complex["nodes"][k]]])
-      labels = collections.Counter(labels)
       row_number = complex["nodes"][k]
+      label = ([f for f in label_variable[complex["nodes"][k]]])
+    #   labels = collections.Counter(labels)
+      for (a, b) in zip(row_number, label): #ラベルと列番号を結合した文字列作成
+          labels.append(str(a) + "_" + b)
       meanValue = np.average(values)
       if e == 1:
           meanValue_min = meanValue
@@ -457,7 +461,7 @@ class KeplerMapper(object):
           meanValue_min = meanValue
       if meanValue_max < meanValue:#スケーリング用に最大値を格納
           meanValue_max = meanValue
-      json_s["nodes"].append({"row":row_number, "labels": labels.items(),"values": values,
+      json_s["nodes"].append({"row":row_number, "labels": labels,"values": values,
       "meanValue": meanValue, "Scaling_meanValue": 0})
       k2e[k] = e
     for k in complex["links"]:#エッジ
